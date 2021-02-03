@@ -29,7 +29,7 @@ class AddTodoState extends State<AddTodoView> {
       floatingActionButton: FloatingActionButton(
         child: Icon(Icons.save),
         onPressed: () {
-          widget.onTodoAdd(textController.text, false);
+          widget.onTodoAdd(textController.text);
           Navigator.pop(context);
         },
       ),

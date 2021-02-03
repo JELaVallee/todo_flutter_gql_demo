@@ -67,24 +67,19 @@ class TodoListState extends State<TodoWidget> {
   // Callbacks
   // Switch completion state for toggled todo item
   void onTodoToggle(Todo todo) {
-    setState(() {
-      todo.setCompleted(!todo.isCompleted());
-    });
+    updateTodoItem(todo);
   }
 
   // Create new todo item
-  void onTodoAdd(String name, bool completed) {
-    setState(() {
-      todoItems
-          .add(Todo(randomNumber.nextInt(100000).toString(), name, completed));
-    });
+  void onTodoAdd(String name) {
+    addTodoItem(Todo("1111", name, false));
   }
 
   // Service Handlers
   void doLoadTodoList() async {
     try {
       String gqlQuery = '''query{
-        listTodos{
+        listTodos {
           items {
             id
             name
@@ -102,7 +97,7 @@ class TodoListState extends State<TodoWidget> {
       List<dynamic> todoResponseItems = listTodos['listTodos']['items'];
       List<Todo> todoItemsList = [];
       todoResponseItems.forEach((item) {
-        print('Adding Item: ' + item.toString());
+        print('Loaded Item: ' + item.toString());
         todoItemsList.add(Todo(item['id'], item['name'], item['completed']));
       });
       setState(() {
@@ -113,18 +108,77 @@ class TodoListState extends State<TodoWidget> {
     }
   }
 
+  void addTodoItem(Todo todo) async {
+    try {
+      String gqlMutation =
+          '''mutation CreateTodo(\$name: String!, \$completed: Boolean!){
+        createTodo(input: {name: \$name, completed: \$completed}){
+          id
+          name
+          completed
+        }
+      }''';
+
+      var gqlRequest =
+          GraphQLRequest<String>(document: gqlMutation, variables: {
+        "name": todo.getName(),
+        "completed": todo.isCompleted(),
+      });
+
+      var operation = Amplify.API.mutate(request: gqlRequest);
+      var response = await operation.response;
+      var data = response.data;
+
+      print('Mutation result: ' + data);
+      doLoadTodoList();
+    } catch (e) {
+      print(e);
+    }
+  }
+
+  void updateTodoItem(Todo todo) async {
+    try {
+      String gqlMutation =
+          '''mutation UpdateTodo(\$id: ID!, \$completed: Boolean){
+        updateTodo(input: {id: \$id, completed: \$completed}){
+          id
+          name
+          completed
+        }
+      }''';
+
+      var gqlRequest =
+          GraphQLRequest<String>(document: gqlMutation, variables: {
+        "id": todo.getId(),
+        "completed": !todo.isCompleted(),
+      });
+
+      var operation = Amplify.API.mutate(request: gqlRequest);
+      var response = await operation.response;
+      var data = response.data;
+
+      print('Mutation result: ' + data);
+      doLoadTodoList();
+    } catch (e) {
+      print(e);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
         title: 'Todo App',
+        debugShowCheckedModeBanner: false,
         theme: ThemeData(
           primarySwatch: Colors.amber,
           visualDensity: VisualDensity.adaptivePlatformDensity,
         ),
         initialRoute: "/",
         routes: {
-          '/': (context) =>
-              ListTodosView(todoItems: todoItems, onTodoToggle: onTodoToggle),
+          '/': (context) => ListTodosView(
+              todoItems: todoItems,
+              onTodoToggle: onTodoToggle,
+              reloadTodoList: doLoadTodoList),
           '/addtodo': (context) => AddTodoView(onTodoAdd: onTodoAdd)
         });
   }
