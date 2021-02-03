@@ -1,6 +1,14 @@
-type Todo @model {
+type Todo @model 
+@key(
+  name: "ByCreationDate", 
+  fields: ["typeKey", "createdAt"],
+  queryField: "listTodosByCreationDate"
+)
+{
   id: ID!
   name: String!
   description: String
   completed: Boolean!
+  typeKey: String!
+  createdAt: AWSDateTime!
 }

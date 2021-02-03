@@ -78,8 +78,8 @@ class TodoListState extends State<TodoWidget> {
   // Service Handlers
   void doLoadTodoList() async {
     try {
-      String gqlQuery = '''query{
-        listTodos {
+      String gqlQuery = '''query listTodosByCreationDate{
+        listTodosByCreationDate(typeKey: "Todo", sortDirection: ASC) {
           items {
             id
             name
@@ -94,7 +94,8 @@ class TodoListState extends State<TodoWidget> {
       var response = await operation.response;
       var data = response.data;
       Map<String, dynamic> listTodos = jsonDecode(data);
-      List<dynamic> todoResponseItems = listTodos['listTodos']['items'];
+      List<dynamic> todoResponseItems =
+          listTodos['listTodosByCreationDate']['items'];
       List<Todo> todoItemsList = [];
       todoResponseItems.forEach((item) {
         print('Loaded Item: ' + item.toString());
@@ -111,19 +112,21 @@ class TodoListState extends State<TodoWidget> {
   void addTodoItem(Todo todo) async {
     try {
       String gqlMutation =
-          '''mutation CreateTodo(\$name: String!, \$completed: Boolean!){
-        createTodo(input: {name: \$name, completed: \$completed}){
+          '''mutation CreateTodo(\$name: String!, \$completed: Boolean!, \$typeKey: String!){
+        createTodo(input: {name: \$name, completed: \$completed, typeKey: \$typeKey}){
           id
           name
           completed
         }
       }''';
 
-      var gqlRequest =
-          GraphQLRequest<String>(document: gqlMutation, variables: {
-        "name": todo.getName(),
-        "completed": todo.isCompleted(),
-      });
+      var gqlRequest = GraphQLRequest<String>(
+          document: gqlMutation,
+          variables: {
+            "name": todo.getName(),
+            "completed": todo.isCompleted(),
+            "typeKey": "Todo"
+          });
 
       var operation = Amplify.API.mutate(request: gqlRequest);
       var response = await operation.response;
