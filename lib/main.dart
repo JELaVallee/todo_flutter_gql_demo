@@ -36,7 +36,7 @@ class TodoWidget extends StatefulWidget {
 }
 
 class TodoListState extends State<TodoWidget> {
-  // Placeholder state entity
+  // Placeholder state entities
   List<Todo> todoItems = [
     Todo("12345", "Learn AWS Amplify...", false),
     Todo("23456", "Learn AWS AppSync...", false),
