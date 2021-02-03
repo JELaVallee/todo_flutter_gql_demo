@@ -75,6 +75,10 @@ class TodoListState extends State<TodoWidget> {
     addTodoItem(Todo("1111", name, false));
   }
 
+  void onDeleteTodoItem(Todo todo) {
+    deleteTodoItem(todo);
+  }
+
   // Service Handlers
   void doLoadTodoList() async {
     try {
@@ -167,6 +171,30 @@ class TodoListState extends State<TodoWidget> {
     }
   }
 
+  void deleteTodoItem(Todo todo) async {
+    try {
+      String gqlMutation = '''mutation DeleteTodo(\$id: ID!){
+        deleteTodo(input: {id: \$id}){
+          id
+        }
+      }''';
+
+      var gqlRequest =
+          GraphQLRequest<String>(document: gqlMutation, variables: {
+        "id": todo.getId(),
+      });
+
+      var operation = Amplify.API.mutate(request: gqlRequest);
+      var response = await operation.response;
+      var data = response.data;
+
+      print('Mutation result: ' + data);
+      doLoadTodoList();
+    } catch (e) {
+      print(e);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
@@ -181,7 +209,8 @@ class TodoListState extends State<TodoWidget> {
           '/': (context) => ListTodosView(
               todoItems: todoItems,
               onTodoToggle: onTodoToggle,
-              reloadTodoList: doLoadTodoList),
+              reloadTodoList: doLoadTodoList,
+              onDeleteTodo: onDeleteTodoItem),
           '/addtodo': (context) => AddTodoView(onTodoAdd: onTodoAdd)
         });
   }
