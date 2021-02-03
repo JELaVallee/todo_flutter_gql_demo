@@ -1,12 +1,18 @@
 import 'package:flutter/material.dart';
 import 'package:amplify_flutter/amplify.dart';
 import 'package:amplify_api/amplify_api.dart';
+
+// Models
+import 'package:todo_flutter_gql_demo/model/todo.dart';
+
+// Views
+import 'package:todo_flutter_gql_demo/views/list_todos_view.dart';
+import 'package:todo_flutter_gql_demo/views/add_todo_view.dart';
+
 // Amplify configuration
 import 'amplifyconfiguration.dart';
 
-// Models
-import './model/todo.dart';
-
+// Random Number Utility
 import 'dart:math';
 
 Random randomNumber = new Random();
@@ -55,9 +61,10 @@ class TodoListState extends State<TodoWidget> {
   }
 
   // Create new todo item
-  void onTodoAdd(String id, String name, bool completed) {
+  void onTodoAdd(String name, bool completed) {
     setState(() {
-      todoItems.add(Todo(id, name, completed));
+      todoItems
+          .add(Todo(randomNumber.nextInt(100000).toString(), name, completed));
     });
   }
 
@@ -75,71 +82,5 @@ class TodoListState extends State<TodoWidget> {
               ListTodosView(todoItems: todoItems, onTodoToggle: onTodoToggle),
           '/addtodo': (context) => AddTodoView(onTodoAdd: onTodoAdd)
         });
-  }
-}
-
-class ListTodosView extends StatelessWidget {
-  final List<Todo> todoItems;
-  final onTodoToggle;
-
-  ListTodosView({@required this.todoItems, @required this.onTodoToggle});
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Text('Todo App'),
-      ),
-      body: ListView.builder(
-          itemCount: todoItems.length,
-          itemBuilder: (context, index) {
-            return CheckboxListTile(
-              title: Text(todoItems[index].getName()),
-              value: todoItems[index].isCompleted(),
-              onChanged: (_) => onTodoToggle(todoItems[index]),
-            );
-          }),
-      floatingActionButton: FloatingActionButton(
-          onPressed: () => Navigator.pushNamed(context, '/addtodo'),
-          child: Icon(Icons.add)),
-    );
-  }
-}
-
-class AddTodoView extends StatefulWidget {
-  final onTodoAdd;
-
-  AddTodoView({@required this.onTodoAdd});
-
-  @override
-  State<StatefulWidget> createState() {
-    return AddTodoState();
-  }
-}
-
-class AddTodoState extends State<AddTodoView> {
-  final TextEditingController textController = TextEditingController();
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: Text('New Todo Item')),
-      body: Center(
-          child: Padding(
-              padding: EdgeInsets.all(16),
-              child: TextField(
-                  autofocus: true,
-                  controller: textController,
-                  decoration: InputDecoration(
-                      labelText: 'Enter your new todo item...')))),
-      floatingActionButton: FloatingActionButton(
-        child: Icon(Icons.save),
-        onPressed: () {
-          widget.onTodoAdd(randomNumber.nextInt(100000).toString(),
-              textController.text, false);
-          Navigator.pop(context);
-        },
-      ),
-    );
   }
 }
