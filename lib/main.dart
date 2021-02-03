@@ -4,6 +4,9 @@ import 'package:amplify_api/amplify_api.dart';
 // Amplify configuration
 import 'amplifyconfiguration.dart';
 
+// Models
+import './model/todo.dart';
+
 void main() {
   runApp(TodoApp());
 }
@@ -23,6 +26,13 @@ class TodoWidget extends StatefulWidget {
 }
 
 class TodoListState extends State<TodoWidget> {
+  // Placeholder state entity
+  List<Todo> todoItems = [
+    Todo("12345", "Learn AWS Amplify...", false),
+    Todo("23456", "Learn AWS AppSync...", false),
+    Todo("34678", "Make Serverless GraphQL happen!", false),
+  ];
+
   @override
   void initState() {
     super.initState();
@@ -30,6 +40,13 @@ class TodoListState extends State<TodoWidget> {
     // Initialize Amplify service components
     Amplify.addPlugin(AmplifyAPI());
     Amplify.configure(amplifyconfig);
+  }
+
+  // Callbacks
+  void onTodoToggle(Todo todo) {
+    setState(() {
+      todo.setCompleted(!todo.isCompleted());
+    });
   }
 
   @override
@@ -44,6 +61,14 @@ class TodoListState extends State<TodoWidget> {
             appBar: AppBar(
               title: Text('Todo App'),
             ),
-            body: Center(child: Text('Hello Todo with GraphQL!'))));
+            body: ListView.builder(
+                itemCount: todoItems.length,
+                itemBuilder: (context, index) {
+                  return CheckboxListTile(
+                    title: Text(todoItems[index].getName()),
+                    value: todoItems[index].isCompleted(),
+                    onChanged: (_) => onTodoToggle(todoItems[index]),
+                  );
+                })));
   }
 }
